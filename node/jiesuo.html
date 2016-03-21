@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Document</title>
+    <style type="text/css">
+        canvas {
+            background-color: #305066;
+            display: inline-block;
+            margin-top: 15px;
+        }
+        body {
+            text-align: center;
+            background-color: #305066;
+        }
+        .title {
+            color: #22C3AA;
+        }
+        .update-password {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            color:#fff;
+            font-size: 10px;
+        }
+        #chooseType,#updatePassword {
+            display: none;
+        }
+        #chooseType {
+            position: absolute;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<h4 id="title" class="title">绘制解锁图案</h4>
+<div id="chooseType">
+    <button onclick="setChooseType(3)">初级</button>
+    <button onclick="setChooseType(4)">一般级</button>
+    <button onclick="setChooseType(5)">噩梦级</button>
+</div>
+<a id="updatePassword" class="update-password" onclick="updatePassword()">重置密码</a>
+<canvas id="canvas" width="300" height="300"></canvas>
+
+<script type="text/javascript">
+    var arr,
+            restPoint,
+            r,
+            chooseType = Number(window.localStorage.getItem('chooseType')) || 3,
+            pswObj = window.localStorage.getItem('passwordx') ? {
+                step: 2,
+                spassword: JSON.parse(window.localStorage.getItem('passwordx'))
+            } : {},
+            lastPoint = [],
+            can = document.getElementById('canvas'),
+            ctx = can.getContext('2d'),
+            touchFlag = false;
+
+    function drawCle(x, y) { // 初始化解锁密码面板
+        ctx.strokeStyle = '#CFE6FF';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2, true);
+        ctx.closePath();
+        ctx.stroke();
+    }
+    function drawPoint() { // 初始化圆心
+        for (var i = 0 ; i < lastPoint.length ; i++) {
+            ctx.fillStyle = '#CFE6FF';
+            ctx.beginPath();
+            ctx.arc(lastPoint[i].x, lastPoint[i].y, r / 2, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+    function drawStatusPoint(type) { // 初始化状态线条
+        for (var i = 0 ; i < lastPoint.length ; i++) {
+            ctx.strokeStyle = type;
+            ctx.beginPath();
+            ctx.arc(lastPoint[i].x, lastPoint[i].y, r, 0, Math.PI * 2, true);
+            ctx.closePath();
+            ctx.stroke();
+        }
+    }
+    function drawLine(po, lastPoint) {// 解锁轨迹
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.moveTo(lastPoint[0].x, lastPoint[0].y);
+        console.log(lastPoint.length);
+        for (var i = 1 ; i < lastPoint.length ; i++) {
+            ctx.lineTo(lastPoint[i].x, lastPoint[i].y);
+        }
+        ctx.lineTo(po.x, po.y);
+        ctx.stroke();
+        ctx.closePath();
+
+    }
+    function createCircle() {// 创建解锁点的坐标，根据canvas的大小来平均分配半径
+
+        var n = chooseType;
+        lastPoint = [];
+        arr = [];
+        restPoint = [];
+        r = ctx.canvas.width / (2 + 4 * n);// 公式计算
+        for (var i = 0 ; i < n ; i++) {
+            for (var j = 0 ; j < n ; j++) {
+                arr.push({
+                    x: j * 4 * r + 3 * r,
+                    y: i * 4 * r + 3 * r
+                });
+                restPoint.push({
+                    x: j * 4 * r + 3 * r,
+                    y: i * 4 * r + 3 * r
+                });
+            }
+        }
+        //return arr;
+    }
+    function getPosition(e) {// 获取touch点相对于canvas的坐标
+        var rect = e.currentTarget.getBoundingClientRect();
+        var po = {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+        return po;
+    }
+    function update(po) {// 核心变换方法在touchmove时候调用
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+        for (var i = 0 ; i < arr.length ; i++) { // 每帧先把面板画出来
+            drawCle(arr[i].x, arr[i].y);
+        }
+
+        drawPoint(lastPoint);// 每帧花轨迹
+        drawLine(po , lastPoint);// 每帧画圆心
+
+        for (var i = 0 ; i < restPoint.length ; i++) {
+            if (Math.abs(po.x - restPoint[i].x) < r && Math.abs(po.y - restPoint[i].y) < r) {
+                drawPoint(restPoint[i].x, restPoint[i].y);
+                lastPoint.push(restPoint[i]);
+                restPoint.splice(i, 1);
+                break;
+            }
+        }
+
+    }
+    function checkPass(psw1, psw2) {// 检测密码
+        var p1 = '',
+                p2 = '';
+        for (var i = 0 ; i < psw1.length ; i++) {
+            p1 += psw1[i].x + psw1[i].y;
+        }
+        for (var i = 0 ; i < psw2.length ; i++) {
+            p2 += psw2[i].x + psw2[i].y;
+        }
+        return p1 === p2;
+    }
+    function storePass(psw) {// touchend结束之后对密码和状态的处理
+        if (pswObj.step == 1) {
+            if (checkPass(pswObj.fpassword, psw)) {
+                pswObj.step = 2;
+                pswObj.spassword = psw;
+                document.getElementById('title').innerHTML = '密码保存成功';
+                drawStatusPoint('#2CFF26');
+                window.localStorage.setItem('passwordx', JSON.stringify(pswObj.spassword));
+                window.localStorage.setItem('chooseType', chooseType);
+            } else {
+                document.getElementById('title').innerHTML = '两次不一致，重新输入';
+                drawStatusPoint('red');
+                delete pswObj.step;
+            }
+        } else if (pswObj.step == 2) {
+            if (checkPass(pswObj.spassword, psw)) {
+                document.getElementById('title').innerHTML = '解锁成功';
+                drawStatusPoint('#2CFF26');
+            } else {
+                drawStatusPoint('red');
+                document.getElementById('title').innerHTML = '解锁失败';
+            }
+        } else {
+            pswObj.step = 1;
+            pswObj.fpassword = psw;
+            document.getElementById('title').innerHTML = '再次输入';
+        }
+
+    }
+    function makeState() {
+        if (pswObj.step == 2) {
+            document.getElementById('updatePassword').style.display = 'block';
+            document.getElementById('chooseType').style.display = 'none';
+            document.getElementById('title').innerHTML = '请解锁';
+        } else if (pswObj.step == 1) {
+            document.getElementById('chooseType').style.display = 'none';
+            document.getElementById('updatePassword').style.display = 'none';
+        } else {
+            document.getElementById('updatePassword').style.display = 'none';
+            document.getElementById('chooseType').style.display = 'block';
+        }
+    }
+    function setChooseType(type){
+        chooseType = type;
+        init();
+    }
+    function updatePassword(){
+        window.localStorage.removeItem('passwordx');
+        window.localStorage.removeItem('chooseType');
+        pswObj = {};
+        document.getElementById('title').innerHTML = '绘制解锁图案';
+        init();
+    }
+    function init() {
+
+        makeState();
+        createCircle();
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        for (var i = 0 ; i < arr.length ; i++) {
+            drawCle(arr[i].x, arr[i].y);
+        }
+    }
+    function bindEvent() {
+        can.addEventListener("touchstart", function (e) {
+            var po = getPosition(e);
+            console.log(po);
+            for (var i = 0 ; i < arr.length ; i++) {
+                if (Math.abs(po.x - arr[i].x) < r && Math.abs(po.y - arr[i].y) < r) {
+
+                    touchFlag = true;
+                    drawPoint(arr[i].x,arr[i].y);
+                    lastPoint.push(arr[i]);
+                    restPoint.splice(i,1);
+                    break;
+                }
+            }
+        }, false);
+        can.addEventListener("touchmove", function (e) {
+            if (touchFlag) {
+                update(getPosition(e));
+            }
+        }, false);
+        can.addEventListener("touchend", function (e) {
+            if (touchFlag) {
+                touchFlag = false;
+                storePass(lastPoint);
+                setTimeout(function(){
+
+                    init();
+                }, 300);
+            }
+
+
+        }, false);
+        document.addEventListener('touchmove', function(e){
+            e.preventDefault();
+        },false);
+    }
+
+    init();
+    bindEvent();
+</script>
+</body>
+</html>

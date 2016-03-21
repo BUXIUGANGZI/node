@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="http://apps.bdimg.com/libs/bootstrap/3.3.4/css/bootstrap.min.css">
+</head>
+<script src="http://ajax.googleapis.com/ajax/libs/angularjs/1.3.14/angular.min.js"></script>
+<body>
+<div ng-app="myApp" ng-controller="myCtrl">
+
+        <div class="input-group">
+            <span class="input-group-addon">user</span>
+            <input ng-model="name" type="text" class="form-control" placeholder="">
+        </div>
+        <br>
+        <div class="input-group">
+            <span class="input-group-addon">mima</span>
+            <input ng-model="password" type="text" class="form-control" placeholder="">
+        </div>
+        <br>
+        <!--名字: <input ng-model="name">-->
+        <!--密码: <input ng-model="password">-->
+        <button type="submit" ng-click="login()">提交</button>
+
+
+</div>
+
+<script>
+    var details={'chen':12555,'gang':25888};
+    localStorage.setItem('details',JSON.stringify(details));
+
+    var app = angular.module('myApp', []);
+    app.controller('myCtrl', function($scope) {
+        $scope.details = JSON.parse(localStorage.getItem("details"));
+
+
+        $scope.name = "John Doe";
+        $scope.password = "";
+        $scope.login=function(){
+            for(var key in $scope.details ){
+                if(key==$scope.name&&$scope.details[key]==$scope.password){
+                    alert('ok')
+                    break
+                }
+
+            }
+
+
+        }
+    });
+
+</script>
+
+
+
+
+</body>
+</html>

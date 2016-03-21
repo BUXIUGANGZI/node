@@ -1,0 +1,6 @@
+我们就要开始了，你知道吗
+
+
+
+git init
+git add README.md

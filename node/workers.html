@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<p>计数: <output id="result"></output></p>
+<button onclick="startWorker()">开始 Worker</button>
+<button onclick="stopWorker()">停止 Worker</button>
+<br /><br />
+
+<script>
+
+    var w;
+
+    function startWorker()
+    {
+        if(typeof(Worker)!=="undefined")
+        {
+            if(typeof(w)=="undefined")
+            {
+                w=new Worker("workers.js");
+            }
+            //添加一个监听事件
+            w.onmessage = function (event) {
+                //event.data中存有数据
+                document.getElementById("result").innerHTML=event.data;
+            };
+        }
+        else
+        {
+            document.getElementById("result").innerHTML="Sorry, your browser does not support Web Workers...";
+        }
+    }
+
+    function stopWorker()
+    {
+        //终止事件
+        w.terminate();
+    }
+</script>
+
+</body>
+</html>

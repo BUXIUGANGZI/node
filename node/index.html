@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<script>
+    function unload(){
+        var formDate=new FormData();
+        var files=document.getElementById('file').files
+        var file=files[0]
+        console.log(file)
+        formDate.append('avatar',file)
+        formDate.append('username','chen')
+        formDate.append('password','1234')
+
+
+
+        console.log(formDate)
+        var xhr=new XMLHttpRequest();
+        xhr.open('POST','index.html',true)
+        xhr.responseType = 'text';
+        xhr.onload=function(e){
+            if(this.status==200){
+                var img = document.createElement('img');
+                img.src = xhr.responseText;
+                document.body.appendChild(img);
+//                console.log(xhr.responseText)
+//               document.getElementById('resule').innerHTML=xhr.responseText
+            }
+        }
+        xhr.send(formDate)}
+
+
+
+
+</script>
+<body>
+<!--<form id="form1" action="index.html" method="post">-->
+    <!--姓名：<input type="text" name="firstname" value="小位子"/> <br/>-->
+    <!--年龄：<input type="text" name="username" value="生死"/><br/>-->
+    <!--<input type="submit" value="提交"/>-->
+</form>
+<form action="post" id="form1" enctype="multipart/form-data"></form>
+请选择文件 <input type="file" id="file" name="file"/><br/>
+<input type="button" value="上传文件" onclick="unload()"/>
+<output id="result"></output>
+<!--<form action="/index.html" method="post">-->
+    <!--用户名:<input type="text" name="username"><br/>-->
+    <!--密码: <input type="text" name="password"><br/>-->
+    <!--<input type="submit" value="注册">-->
+<!--</form>-->
+<!--<output id="result"></output>-->
+
+
+
+</body>
+</html>

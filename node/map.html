@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<div> i love you
+<p id="dian">点我啊</p>
+
+</div>
+<script>
+    var json = {
+        getData: function (url, callback) {
+            var funName = getFunName();
+            url += "&cb=window." + funName;
+            window[funName] = function () {
+                try {
+                    delete window[funName]
+                } catch (e) {
+                }
+                callback && callback.apply(null, arguments);
+            }
+            var script = document.createElement('script');
+            script.src = url;
+            script.id = 'SOSOWMJSONP';
+            script.type = 'text/javascript';
+            var head = document.getElementsByTagName('head')[0];
+            head.appendChild(script);
+        },
+        //清除script标签避免内存泄露
+        delTag: function () {
+            var script;
+            script = document.getElementById('SOSOWMJSONP');
+            script.parentNode.removeChild(script);
+            // 浏览器不会回收这些属性所指向的对象.
+            //手动删除它以免内存泄漏.
+            for (var prop in script) {
+                delete script[prop];
+            }
+        }
+    };
+    //随机数的初始值
+    var random = 0;
+    //获取随机的函数名称
+    var getFunName = function () {
+        return "abcdefg_" + (++random);
+    };
+    var callB=function(data){
+        console.log(data)
+    }
+
+    var url1="http://localhost:1337/ajax?ajax=true";
+
+
+
+
+    document.getElementById("dian").onclick=function(){
+
+      json.getData(url1, callB);
+//        window.location="http://localhost:1337/ajax"
+    }
+
+
+
+    var  ary=[2,5,6,8,9,4,7,8,3,2];
+    ary.forEach(function(item,index,array){
+
+        array[index]+=1;
+    })
+    ~function () {
+        var parObj = {
+            isNum: "Number",
+            isStr: "String",
+            isBoo: "Boolean",
+            isNul: "Null",
+            isUnd: "Undefined",
+            isObj: "Object",
+            isAry: "Array",
+            isFun: "Function",
+            isReg: "RegExp",
+            isDat: "Date"
+        };
+        var isType = function (type) {
+            return function (val) {
+                return Object.prototype.toString.call(val) === "[object " + type + "]";
+            }
+        }
+        var cT = {};
+        for (var key in parObj) {
+            cT[key] = isType(parObj[key]);
+        }
+        window.cT = cT;
+    }();
+
+
+</script>
+</body>
+</html>
